@@ -33,9 +33,13 @@ static cv::Mat rotateRodriques(cv::Mat &rotMat, cv::Vec3d &tvecs) {
         extrinsics.at<double>(row,3) = tvecs[row];
     }
     extrinsics.at<double>(3,3) = 1;
-
+    cv::Mat translation = cv::Mat::zeros(4,4,CV_64F);
+    for (int i=0; i<4; i++) {
+        translation.at<double>(i,i) = 1;
+    }
+    translation.at<double>(1,3) = 0.05;
     // Convert Opencv coords to OpenGL coords
-    extrinsics = [ArucoCV GetCVToGLMat] * extrinsics;
+    extrinsics =  [ArucoCV GetCVToGLMat] * extrinsics; //* translation;
     return extrinsics;
 }
 
@@ -89,12 +93,6 @@ static void detect(std::vector<std::vector<cv::Point2f> > &corners, std::vector<
     cv::Mat distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
     cv::aruco::estimatePoseSingleMarkers(corners, markerSize, intrinMat, distCoeffs, rvecs, tvecs);
     NSLog(@"found: rvecs.size(): %lu", rvecs.size());
-    for (int i=0; i<tvecs.size(); i++) {
-        tvecs[i][0] = tvecs[i][0] - 0.03;
-    }
-    for (auto vec: tvecs) {
-        std::cout << vec << std::endl;
-    }
 
     cv::Mat rotMat, tranMat;
     for (int i = 0; i < rvecs.size(); i++) {
