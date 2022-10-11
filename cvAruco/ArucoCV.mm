@@ -48,8 +48,18 @@ static void detect(std::vector<std::vector<cv::Point2f> > &corners, std::vector<
     CGFloat width = CVPixelBufferGetWidth(pixelBuffer);
     CGFloat height = CVPixelBufferGetHeight(pixelBuffer);
     cv::Mat mat(height, width, CV_8UC1, baseaddress, 0); //CV_8UC1
-    
-    cv::aruco::detectMarkers(mat,dictionary,corners,ids);
+    std::vector<std::vector<cv::Point2f>> placeholder;
+    cv::aruco::detectMarkers(
+        mat,
+        dictionary,
+        placeholder,
+        ids,
+        cv::aruco::DetectorParameters::create(),
+        corners
+    );
+    for (int i=0; i<corners.size(); i++) {
+        ids.push_back(i);
+    }
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 }
 
@@ -79,7 +89,12 @@ static void detect(std::vector<std::vector<cv::Point2f> > &corners, std::vector<
     cv::Mat distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
     cv::aruco::estimatePoseSingleMarkers(corners, markerSize, intrinMat, distCoeffs, rvecs, tvecs);
     NSLog(@"found: rvecs.size(): %lu", rvecs.size());
-    
+    for (int i=0; i<tvecs.size(); i++) {
+        tvecs[i][0] = tvecs[i][0] - 0.03;
+    }
+    for (auto vec: tvecs) {
+        std::cout << vec << std::endl;
+    }
 
     cv::Mat rotMat, tranMat;
     for (int i = 0; i < rvecs.size(); i++) {
