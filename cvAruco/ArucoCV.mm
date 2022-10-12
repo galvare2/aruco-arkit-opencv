@@ -37,9 +37,9 @@ static cv::Mat rotateRodriques(cv::Mat &rotMat, cv::Vec3d &tvecs) {
     for (int i=0; i<4; i++) {
         translation.at<double>(i,i) = 1;
     }
-    translation.at<double>(1,3) = 0.05;
+    translation.at<double>(2,3) = -0.035;
     // Convert Opencv coords to OpenGL coords
-    extrinsics =  [ArucoCV GetCVToGLMat] * extrinsics; //* translation;
+    extrinsics =  [ArucoCV GetCVToGLMat] * extrinsics * translation;
     return extrinsics;
 }
 
@@ -65,6 +65,33 @@ static void detect(std::vector<std::vector<cv::Point2f> > &corners, std::vector<
         ids.push_back(i);
     }
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+}
+
+static void refineCorners(std::vector<std::vector<cv::Point2f> > &corners,CVPixelBufferRef pixelBuffer) {
+    for (int i=0; i<corners.size(); i++) {
+        std::cout << corners[i] << std::endl;
+    }
+}
+
+
++(NSMutableArray *) detectPotentialMarkers:(CVPixelBufferRef)pixelBuffer {
+    std::vector<int> ids;
+    std::vector<std::vector<cv::Point2f>> corners;
+    detect(corners, ids, pixelBuffer);
+    NSMutableArray *result = [NSMutableArray new];
+    for (int i=0; i<corners.size(); i++) {
+        std::vector<cv::Point2f> corners_item = corners[i];
+        NSMutableArray *result_item = [NSMutableArray new];
+        for (int j=0; j<corners_item.size(); j++) {
+            cv::Point2f pt = corners_item[j];
+            NSMutableArray *point = [NSMutableArray new];
+            [point addObject:[NSNumber numberWithFloat:pt.y]];
+            [point addObject:[NSNumber numberWithFloat:pt.x]];
+            [result_item addObject:point];
+        }
+        [result addObject:result_item];
+    }
+    return result;
 }
 
 +(NSMutableArray *) estimatePose:(CVPixelBufferRef)pixelBuffer withIntrinsics:(matrix_float3x3)intrinsics andMarkerSize:(Float64)markerSize {
