@@ -94,6 +94,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, AR
         // 4) return them as an array of matrixes
 
         let detected: [[[Float]]] = ArucoCV.detectPotentialMarkers(pixelBuffer) as! [[[Float]]];
+        
         drawPaths(detected: detected, frame: frame)
         
         print(CVPixelBufferGetWidth(pixelBuffer), CVPixelBufferGetHeight(pixelBuffer))
@@ -127,16 +128,13 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, AR
         let viewPortSize = sceneView.bounds.size
         let normalizeTransform = CGAffineTransform(scaleX: 1.0/imageSize.width, y: 1.0/imageSize.height)
 //        let flipTransform = CGAffineTransform(scaleX: -1, y: -1).translatedBy(x: -1, y: -1)
-        let displayTransform = frame.displayTransform(for: interfaceOrientation, viewportSize: viewPortSize)
+        let displayTransform = frame.displayTransform(for: UIApplication.shared.statusBarOrientation, viewportSize: viewPortSize)
         // 4) Convert to view size
         let toViewPortTransform = CGAffineTransform(scaleX: viewPortSize.width, y: viewPortSize.height)
         return point.applying(normalizeTransform.concatenating(displayTransform).concatenating(toViewPortTransform))
     }
     
     func drawPaths(detected: [[[Float]]], frame: ARFrame) {
-//        shapeLayers.forEach { $0.removeFromSuperlayer() }
-        //shapeLayers = []
-        
         for i in 0..<detected.count {
             let corners = detected[i];
             // TODO: Figure out correct indices
@@ -172,7 +170,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, AR
             shapeLayers[shapeLayers.count-1].removeFromSuperlayer()
             shapeLayers.remove(at: shapeLayers.count-1)
         }
-
     }
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
